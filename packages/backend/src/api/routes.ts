@@ -96,6 +96,13 @@ export function createRoutes(deps: ApiDependencies): RouteDefinition[] {
 
     // ─── Session Routes (authenticated) ────────────────────────────────
     {
+      method: 'POST',
+      path: '/characters',
+      requiresAuth: true,
+      handler: createCharacterHandler(deps),
+    },
+
+    {
       method: 'GET',
       path: '/sessions/:campaignId',
       requiresAuth: true,
@@ -204,6 +211,46 @@ function createCreateCampaignHandler(deps: ApiDependencies): RouteHandler {
     }
 
     return { status: 201, body: { campaign: result } };
+  };
+}
+
+// ─── Character Handlers ──────────────────────────────────────────────────────
+
+function createCharacterHandler(deps: ApiDependencies): RouteHandler {
+  return async (req: ApiRequest): Promise<ApiResponse> => {
+    const authResult = authenticateRequest(deps.jwtProvider, req.headers.authorization);
+    if (authResult.kind !== 'valid') {
+      return mapAuthError(authResult.kind);
+    }
+
+    const { name, race, class: charClass, attributes, backgroundStory } = req.body as {
+      name: string;
+      race: string;
+      class: string;
+      attributes: Record<string, number>;
+      backgroundStory?: string;
+    };
+
+    if (!name || !race || !charClass || !attributes) {
+      return { status: 400, body: { error: 'name, race, class, and attributes are required' } };
+    }
+
+    // Create character in-memory
+    const character = {
+      id: crypto.randomUUID(),
+      userId: authResult.context.userId,
+      name,
+      race,
+      class: charClass,
+      level: 1,
+      experience: 0,
+      attributes,
+      abilities: [],
+      inventory: [],
+      backgroundStory: backgroundStory ?? '',
+    };
+
+    return { status: 201, body: character };
   };
 }
 
