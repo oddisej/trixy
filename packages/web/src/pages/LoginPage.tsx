@@ -28,14 +28,14 @@ export function LoginPage({ onLoginSuccess, onNavigateToRegister }: LoginPagePro
       if (result.kind === 'ok') {
         onLoginSuccess(result.userId);
       } else if (result.kind === 'invalid_credentials') {
-        setError('Die Tore bleiben verschlossen. Falsches Passwort oder E-Mail.');
+        setError('E-Mail oder Passwort ist falsch.');
       } else if (result.kind === 'account_locked') {
-        setError(`Dein Zugang ist versiegelt. Versuche es in ${result.remainingSeconds} Sekunden erneut.`);
+        setError(`Dein Konto ist gesperrt. Versuche es in ${result.remainingSeconds} Sekunden erneut.`);
       } else {
-        setError('Ein dunkler Nebel verhindert den Zugang. Versuche es erneut.');
+        setError('Anmeldung fehlgeschlagen. Bitte versuche es erneut.');
       }
     } catch {
-      setError('Die Verbindung zum Dungeon ist unterbrochen.');
+      setError('Verbindung zum Server fehlgeschlagen.');
     } finally {
       setLoading(false);
     }
@@ -49,12 +49,12 @@ export function LoginPage({ onLoginSuccess, onNavigateToRegister }: LoginPagePro
       if (result.kind === 'ok') {
         onLoginSuccess(result.userId);
       } else if (result.kind === 'provider_unavailable') {
-        setError(`Der ${provider}-Portstein ist derzeit inaktiv.`);
+        setError(`${provider}-Anmeldung ist gerade nicht verfügbar.`);
       } else {
-        setError('Der magische Zugang ist fehlgeschlagen.');
+        setError('Anmeldung fehlgeschlagen.');
       }
     } catch {
-      setError('Die Verbindung zum Dungeon ist unterbrochen.');
+      setError('Verbindung zum Server fehlgeschlagen.');
     } finally {
       setLoading(false);
     }
@@ -74,7 +74,7 @@ export function LoginPage({ onLoginSuccess, onNavigateToRegister }: LoginPagePro
         <div style={styles.logoSection}>
           <div style={styles.logoIcon}>⚔️</div>
           <h1 style={styles.title}>The Dungeons of Arhenzech</h1>
-          <p style={styles.subtitle}>Betritt das Dungeon</p>
+          <p style={styles.subtitle}>Willkommen zurück</p>
         </div>
 
         {/* Error */}
@@ -87,7 +87,7 @@ export function LoginPage({ onLoginSuccess, onNavigateToRegister }: LoginPagePro
         {/* Form */}
         <form onSubmit={handleSubmit} aria-label="Login form" style={styles.form}>
           <div style={styles.field}>
-            <label htmlFor="email" style={styles.label}>Abenteurer-Name (E-Mail)</label>
+            <label htmlFor="email" style={styles.label}>E-Mail</label>
             <input
               id="email"
               type="email"
@@ -95,13 +95,13 @@ export function LoginPage({ onLoginSuccess, onNavigateToRegister }: LoginPagePro
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
-              placeholder="held@dungeon.de"
+              placeholder="name@example.com"
               style={styles.input}
             />
           </div>
 
           <div style={styles.field}>
-            <label htmlFor="password" style={styles.label}>Geheimwort</label>
+            <label htmlFor="password" style={styles.label}>Passwort</label>
             <input
               id="password"
               type="password"
@@ -117,14 +117,14 @@ export function LoginPage({ onLoginSuccess, onNavigateToRegister }: LoginPagePro
           </div>
 
           <button type="submit" disabled={loading} style={styles.primaryButton}>
-            {loading ? '🔮 Öffne die Tore...' : '🗝️ Eintreten'}
+            {loading ? 'Wird angemeldet...' : 'Anmelden'}
           </button>
         </form>
 
         {/* Divider */}
         <div style={styles.divider}>
           <div style={styles.dividerLine} />
-          <span style={styles.dividerText}>oder per Portstein</span>
+          <span style={styles.dividerText}>oder</span>
           <div style={styles.dividerLine} />
         </div>
 
@@ -152,9 +152,9 @@ export function LoginPage({ onLoginSuccess, onNavigateToRegister }: LoginPagePro
 
         {/* Register link */}
         <p style={styles.registerText}>
-          Noch kein Abenteurer?{' '}
+          Noch kein Konto?{' '}
           <button type="button" onClick={onNavigateToRegister} style={styles.linkButton}>
-            Charakter erstellen
+            Jetzt registrieren
           </button>
         </p>
       </div>

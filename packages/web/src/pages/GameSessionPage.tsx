@@ -34,7 +34,7 @@ export function GameSessionPage({ campaignId }: GameSessionPageProps): React.JSX
         }
       } catch {
         if (!cancelled) {
-          setError('Die Spielsitzung konnte nicht geladen werden.');
+          setError('Sitzung konnte nicht geladen werden.');
         }
       }
     }
@@ -52,11 +52,11 @@ export function GameSessionPage({ campaignId }: GameSessionPageProps): React.JSX
     const trimmed = inputText.trim();
 
     if (!trimmed) {
-      setError('Beschreibe deine Aktion.');
+      setError('Bitte gib eine Nachricht ein.');
       return;
     }
     if (trimmed.length > 2000) {
-      setError('Deine Eingabe ist zu lang. Maximum 2000 Zeichen.');
+      setError('Deine Nachricht ist zu lang (max. 2000 Zeichen).');
       return;
     }
 
@@ -68,7 +68,7 @@ export function GameSessionPage({ campaignId }: GameSessionPageProps): React.JSX
       setMessages((prev) => [...prev, response]);
       setInputText('');
     } catch {
-      setError('Der Game Master hört dich nicht. Versuche es erneut.');
+      setError('Nachricht konnte nicht gesendet werden. Bitte versuche es erneut.');
     } finally {
       setLoading(false);
     }
@@ -123,7 +123,7 @@ export function GameSessionPage({ campaignId }: GameSessionPageProps): React.JSX
         <div style={styles.headerLeft}>
           <span style={styles.headerIcon}>🏰</span>
           <div>
-            <h1 style={styles.title}>Dungeon-Sitzung</h1>
+            <h1 style={styles.title}>Aktive Sitzung</h1>
             <p style={styles.subtitle}>The Dungeons of Arhenzech</p>
           </div>
         </div>
@@ -134,7 +134,7 @@ export function GameSessionPage({ campaignId }: GameSessionPageProps): React.JSX
             onChange={handleVoiceToggle}
             style={styles.voiceCheckbox}
           />
-          <span>🎤 Sprache</span>
+          <span>🎤 Spracheingabe</span>
         </label>
       </header>
 
@@ -143,8 +143,7 @@ export function GameSessionPage({ campaignId }: GameSessionPageProps): React.JSX
           <div style={styles.emptyState}>
             <div style={styles.emptyIcon}>📖</div>
             <p style={styles.emptyText}>
-              Die Geschichte beginnt mit deiner ersten Aktion.<br />
-              Beschreibe, was dein Held tut.
+              Beginne dein Abenteuer, indem du deine erste Aktion beschreibst.
             </p>
           </div>
         )}
@@ -163,7 +162,7 @@ export function GameSessionPage({ campaignId }: GameSessionPageProps): React.JSX
           type="text"
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          placeholder="Beschreibe deine Aktion..."
+          placeholder="Was möchtest du tun?"
           maxLength={2000}
           disabled={loading}
           style={styles.input}

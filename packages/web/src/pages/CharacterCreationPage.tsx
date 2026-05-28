@@ -59,11 +59,11 @@ export function CharacterCreationPage({
     setError(null);
 
     if (!name.trim()) {
-      setError('Jeder Held braucht einen Namen.');
+      setError('Bitte gib einen Namen ein.');
       return;
     }
     if (backgroundStory.length > 2000) {
-      setError('Deine Geschichte ist zu lang. Maximum 2000 Zeichen.');
+      setError('Die Hintergrundgeschichte ist zu lang (max. 2000 Zeichen).');
       return;
     }
 
@@ -78,7 +78,7 @@ export function CharacterCreationPage({
       });
       onCharacterCreated(character.id);
     } catch {
-      setError('Die Götter zürnen. Charakter konnte nicht erschaffen werden.');
+      setError('Charakter konnte nicht erstellt werden. Bitte versuche es erneut.');
     } finally {
       setLoading(false);
     }
@@ -89,28 +89,28 @@ export function CharacterCreationPage({
       <div style={styles.content}>
         <header style={styles.header}>
           <span style={styles.headerIcon}>🪶</span>
-          <h1 style={styles.title}>Erschaffe deinen Helden</h1>
-          <p style={styles.subtitle}>Eine Legende beginnt mit einem Namen</p>
+          <h1 style={styles.title}>Charakter erstellen</h1>
+          <p style={styles.subtitle}>Gib deinem Helden ein Gesicht</p>
         </header>
 
         <form onSubmit={handleSubmit} style={styles.form}>
           {/* Name */}
           <div style={styles.field}>
-            <label htmlFor="char-name" style={styles.label}>Heldenname</label>
+            <label htmlFor="char-name" style={styles.label}>Name</label>
             <input
               id="char-name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              placeholder="z.B. Aragorn der Tapfere"
+              placeholder="z.B. Aragorn"
               style={styles.input}
             />
           </div>
 
           {/* Race */}
           <div style={styles.field}>
-            <label style={styles.label}>Volk</label>
+            <label style={styles.label}>Rasse</label>
             <div style={styles.optionGrid}>
               {RACES.map((r) => (
                 <button
@@ -192,7 +192,7 @@ export function CharacterCreationPage({
               onChange={(e) => setBackgroundStory(e.target.value)}
               maxLength={2000}
               rows={6}
-              placeholder="Erzähle die Geschichte deines Helden..."
+              placeholder="Beschreibe die Geschichte deines Charakters..."
               style={styles.textarea}
             />
             <span style={styles.charCount}>{backgroundStory.length}/2000</span>
@@ -205,7 +205,7 @@ export function CharacterCreationPage({
           )}
 
           <button type="submit" disabled={loading} style={styles.submitButton}>
-            {loading ? '🪄 Erschaffe...' : '✨ Helden erschaffen'}
+            {loading ? 'Wird erstellt...' : 'Charakter erstellen'}
           </button>
         </form>
       </div>

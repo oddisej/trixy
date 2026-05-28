@@ -32,7 +32,7 @@ export function CampaignListPage({
         }
       } catch {
         if (!cancelled) {
-          setError('Die Schriftrollen sind unleserlich. Versuche es später erneut.');
+          setError('Kampagnen konnten nicht geladen werden.');
         }
       } finally {
         if (!cancelled) {
@@ -52,7 +52,7 @@ export function CampaignListPage({
           <div style={styles.titleRow}>
             <span style={styles.crestIcon}>📜</span>
             <div>
-              <h1 style={styles.title}>Deine Abenteuer</h1>
+              <h1 style={styles.title}>Meine Kampagnen</h1>
               <p style={styles.subtitle}>The Dungeons of Arhenzech</p>
             </div>
           </div>
@@ -67,15 +67,14 @@ export function CampaignListPage({
         {loading ? (
           <div style={styles.loading} aria-busy="true">
             <div style={styles.spinner}>🔮</div>
-            <p>Lade die Schriftrollen...</p>
+            <p>Lade Kampagnen...</p>
           </div>
         ) : campaigns.length === 0 ? (
           <div style={styles.empty}>
             <div style={styles.emptyIcon}>🗺️</div>
-            <h2 style={styles.emptyTitle}>Noch kein Abenteuer begonnen</h2>
+            <h2 style={styles.emptyTitle}>Noch keine Kampagne</h2>
             <p style={styles.emptyText}>
-              Die Welt von Arhenzech wartet auf einen tapferen Helden.
-              Beginne deine Reise und schreibe deine eigene Legende.
+              Starte deine erste Kampagne und beginne dein Abenteuer.
             </p>
           </div>
         ) : (
@@ -106,7 +105,7 @@ export function CampaignListPage({
           onClick={onNewCampaign}
           style={styles.newButton}
         >
-          ✨ Neues Abenteuer beginnen
+          + Neue Kampagne
         </button>
       </div>
     </div>

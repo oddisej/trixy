@@ -25,7 +25,7 @@ export function DiceResult({ result }: DiceResultProps): React.JSX.Element {
       <div style={styles.header}>
         <span style={styles.diceIcon}>🎲</span>
         <span style={styles.headerText}>
-          {isCritical ? 'KRITISCHER TREFFER!' : isFumble ? 'PATZER!' : succeeded ? 'Erfolg' : 'Fehlschlag'}
+          {isCritical ? 'Kritischer Erfolg!' : isFumble ? 'Kritischer Fehlschlag!' : succeeded ? 'Erfolg' : 'Fehlschlag'}
         </span>
       </div>
 
