@@ -53,7 +53,7 @@ export function applyFact(worldState: WorldState, fact: Fact): ApplyFactResult {
     };
   }
 
-  const existing = worldState.establishedFacts[existingIndex];
+  const existing = worldState.establishedFacts[existingIndex]!;
 
   // Same value — no contradiction, no-op (fact already established)
   if (existing.value === fact.value) {

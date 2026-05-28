@@ -80,7 +80,7 @@ export const MAX_LEVEL = 20;
 export function computeLevelForXp(totalXp: number): number {
   let level = 1;
   for (let i = 2; i <= MAX_LEVEL; i++) {
-    if (totalXp >= LEVEL_THRESHOLDS[i]) {
+    if (totalXp >= LEVEL_THRESHOLDS[i]!) {
       level = i;
     } else {
       break;

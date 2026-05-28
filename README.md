@@ -64,16 +64,6 @@ npm run build
 npm run clean
 ```
 
-### Web-Client starten (Entwicklung)
-
-```bash
-npm run dev --workspace=packages/web
-```
-
-Öffne dann http://localhost:5173 im Browser.
-
-> **Hinweis:** Der Web-Client benötigt ein laufendes Backend für volle Funktionalität. Ohne Backend werden API-Aufrufe fehlschlagen.
-
 ### Backend starten
 
 ```bash
@@ -83,6 +73,16 @@ npm run dev --workspace=packages/backend
 Das Backend läuft dann auf http://localhost:3000.
 
 > **Hinweis:** Für die KI-Narration wird ein LLM-Provider benötigt (z.B. OpenAI API Key). Ohne diesen funktioniert das Spiel nur mit Mock-Antworten.
+
+### Web-Client starten (Entwicklung)
+
+```bash
+npm run dev --workspace=packages/web
+```
+
+Öffne dann http://localhost:5173 im Browser.
+
+> **Hinweis:** Der Web-Client benötigt ein laufendes Backend für volle Funktionalität. Ohne Backend werden API-Aufrufe fehlschlagen.
 
 ### Mobile-Client (React Native)
 

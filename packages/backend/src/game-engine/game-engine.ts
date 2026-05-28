@@ -21,8 +21,6 @@ import type {
   ConversationMessage,
   SessionState,
   WorldState,
-  SceneSnapshot,
-  Character,
 } from '@trixy/shared';
 
 import { InputProcessor, type ValidatedInput } from '../input/input-processor.js';
@@ -255,7 +253,7 @@ export class GameEngine {
    * come from the campaign's world state. For now we construct a minimal one
    * from the session's scene information.
    */
-  private extractWorldState(session: SessionState): WorldState {
+  private extractWorldState(_session: SessionState): WorldState {
     // The session doesn't directly carry WorldState, but in a real implementation
     // the SessionLoader would provide it. We construct a minimal one here.
     return {

@@ -5,7 +5,7 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import type { ConversationMessage, ActionResolution } from '../types';
+import type { ConversationMessage } from '../types';
 import { DiceResult } from '../components/DiceResult';
 import { useApi } from '../hooks/useApi';
 

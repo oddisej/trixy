@@ -76,7 +76,7 @@ export function validateCampaignSeed(seed: CampaignSeed): CampaignSeedValidation
     errors.push('Must contain at least 3 quest directions');
   } else {
     for (let i = 0; i < seed.questDirections.length; i++) {
-      const direction = seed.questDirections[i];
+      const direction = seed.questDirections[i]!;
       const sentences = countSentences(direction);
       if (sentences < 1 || sentences > 2) {
         errors.push(

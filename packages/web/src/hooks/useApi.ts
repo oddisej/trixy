@@ -1,6 +1,6 @@
 /**
- * Placeholder hook for REST API calls.
- * Provides typed methods for interacting with the backend API.
+ * Hook for REST API calls with automatic token management.
+ * Stores the access token after login/register and includes it in subsequent requests.
  */
 
 import type { AuthResult, Campaign, Character, ConversationMessage, SessionState } from '../types';
@@ -26,35 +26,61 @@ export interface ApiHook {
 
 const API_BASE = '/api';
 
+// Simple token store (shared across hook instances)
+let accessToken: string | null = null;
+
+function setToken(token: string | null) {
+  accessToken = token;
+}
+
 /**
- * Hook providing REST API access. Currently a placeholder that returns
- * structured errors — will be connected to the real backend.
+ * Hook providing REST API access with automatic auth token management.
  */
 export function useApi(): ApiHook {
   async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (accessToken) {
+      headers['Authorization'] = `Bearer ${accessToken}`;
+    }
+
     const res = await fetch(`${API_BASE}${path}`, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: body ? JSON.stringify(body) : undefined,
     });
-    if (!res.ok) {
+
+    // Auth endpoints return structured JSON even on 4xx — parse it
+    const json = await res.json();
+    if (!res.ok && !json.kind && !json.error) {
       throw new Error(`API error: ${res.status} ${res.statusText}`);
     }
-    return res.json() as Promise<T>;
+    return json as T;
+  }
+
+  async function authRequest(method: string, path: string, body?: unknown): Promise<AuthResult> {
+    const result = await request<AuthResult>(method, path, body);
+    if (result.kind === 'ok') {
+      setToken(result.accessToken);
+    }
+    return result;
   }
 
   return {
     login: (email, password) =>
-      request<AuthResult>('POST', '/auth/login', { email, password }),
+      authRequest('POST', '/auth/login', { email, password }),
 
     loginWithProvider: (provider) =>
-      request<AuthResult>('POST', `/auth/oauth/${provider}`),
+      authRequest('POST', `/auth/oauth/${provider}`),
 
     register: (email, password) =>
-      request<AuthResult>('POST', '/auth/register', { email, password }),
+      authRequest('POST', '/auth/register', { email, password }),
 
-    listCampaigns: () =>
-      request<Campaign[]>('GET', '/campaigns'),
+    listCampaigns: async () => {
+      const result = await request<{ campaigns: Campaign[] }>('GET', '/campaigns');
+      return result.campaigns ?? [];
+    },
 
     createCampaign: (characterId, title) =>
       request<Campaign>('POST', '/campaigns', { characterId, title }),

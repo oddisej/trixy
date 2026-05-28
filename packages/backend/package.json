@@ -9,7 +9,7 @@
     "build": "tsc --project tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
-    "dev": "tsx watch src/index.ts"
+    "dev": "tsx watch src/server.ts"
   },
   "dependencies": {
     "@trixy/shared": "*"

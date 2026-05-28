@@ -36,7 +36,7 @@ interface UseApiReturn {
 }
 
 export function useApi(): UseApiReturn {
-  const baseUrl = ''; // TODO: configure from environment
+  // TODO: configure baseUrl from environment
 
   async function request<T>(_endpoint: string, _options?: RequestInit): Promise<ApiResponse<T>> {
     // Placeholder implementation — will be replaced with actual fetch calls

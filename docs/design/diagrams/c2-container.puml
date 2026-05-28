@@ -1,0 +1,52 @@
+@startuml C2_Container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title Container Diagram – Trixy AI RPG
+
+Person(player, "Player", "Plays the AI-driven RPG")
+
+System_Boundary(trixy, "Trixy AI RPG") {
+    Container(web_client, "Web Client", "React / TypeScript", "Browser-based game UI with chat, character management, and campaign views")
+    Container(mobile_client, "Mobile Client", "React Native / TypeScript", "iOS & Android game UI with voice input support")
+    Container(api_gateway, "API Gateway", "Node.js / Express", "REST & WebSocket API – routes requests, handles auth tokens")
+    Container(auth_service, "Auth Service", "TypeScript", "Registration, login, OAuth, account lock, JWT management")
+    Container(session_service, "Session Service", "TypeScript", "Campaign lifecycle, session state, conversation history, save/load")
+    Container(game_engine, "Game Engine", "TypeScript", "Dice rolls, XP/leveling, action resolution, prompt construction, orchestration")
+    Container(content_filter, "Content Filter", "TypeScript", "Evaluates LLM output against age-appropriate content rules")
+    Container(llm_adapter, "LLM Adapter", "TypeScript", "Abstraction over LLM providers – narration, NPC dialogue, campaign seeds")
+    Container(stt_adapter, "Speech-to-Text Adapter", "TypeScript", "Abstraction over STT providers – transcribes voice input")
+    ContainerDb(db, "Primary Database", "PostgreSQL", "Users, characters, campaigns, messages, quests")
+    ContainerDb(cache, "Cache", "Redis", "Session cache, rate limiting")
+}
+
+System_Ext(llm_provider, "LLM Provider", "OpenAI / Anthropic / Mistral")
+System_Ext(stt_provider, "Speech-to-Text Provider", "External transcription service")
+System_Ext(oauth_provider, "OAuth Provider", "Google / Apple")
+
+Rel(player, web_client, "Uses", "HTTPS")
+Rel(player, mobile_client, "Uses", "HTTPS")
+
+Rel(web_client, api_gateway, "Calls API", "REST / WebSocket")
+Rel(mobile_client, api_gateway, "Calls API", "REST / WebSocket")
+
+Rel(api_gateway, auth_service, "Authenticates")
+Rel(api_gateway, session_service, "Manages sessions")
+Rel(api_gateway, game_engine, "Handles player actions")
+Rel(api_gateway, stt_adapter, "Transcribes voice")
+
+Rel(auth_service, oauth_provider, "Social login", "OAuth 2.0")
+Rel(auth_service, db, "Reads/writes user data")
+
+Rel(session_service, db, "Persists campaigns & messages")
+Rel(session_service, cache, "Caches active sessions")
+
+Rel(game_engine, llm_adapter, "Requests narration")
+Rel(game_engine, content_filter, "Validates LLM output")
+Rel(game_engine, session_service, "Loads/saves state")
+
+Rel(llm_adapter, llm_provider, "Generates text", "HTTPS")
+Rel(llm_adapter, content_filter, "Pre-delivery check")
+
+Rel(stt_adapter, stt_provider, "Transcribes audio", "HTTPS")
+
+@enduml

@@ -144,12 +144,12 @@ function buildSceneSection(scene: SceneSnapshot): string {
 function buildWorldStateReference(worldState: WorldState): string | null {
   // Prefer an NPC reference if available, otherwise fall back to a location.
   if (worldState.knownNPCs.length > 0) {
-    const npc = worldState.knownNPCs[0];
+    const npc = worldState.knownNPCs[0]!;
     return `[Weltwissen – NPC]\nName: ${npc.name}\nPersönlichkeit: ${npc.personalityTraits.join(', ')}\nHintergrund: ${npc.background}`;
   }
 
   if (worldState.knownLocations.length > 0) {
-    const loc = worldState.knownLocations[0];
+    const loc = worldState.knownLocations[0]!;
     return `[Weltwissen – Ort]\nName: ${loc.name}\nBeschreibung: ${loc.description}`;
   }
 
@@ -163,7 +163,7 @@ function buildHistoryReference(history: ConversationMessage[]): string | null {
     return null;
   }
 
-  const lastPlayerAction = playerMessages[playerMessages.length - 1];
+  const lastPlayerAction = playerMessages[playerMessages.length - 1]!;
   return `[Letzte Spieleraktion]\n${lastPlayerAction.text}`;
 }
 

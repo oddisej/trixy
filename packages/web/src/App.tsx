@@ -7,12 +7,14 @@
 
 import React, { useState } from 'react';
 import { LoginPage } from './pages/LoginPage';
+import { RegisterPage } from './pages/RegisterPage';
 import { CharacterCreationPage } from './pages/CharacterCreationPage';
 import { CampaignListPage } from './pages/CampaignListPage';
 import { GameSessionPage } from './pages/GameSessionPage';
 
 type AppView =
   | { kind: 'login' }
+  | { kind: 'register' }
   | { kind: 'campaigns' }
   | { kind: 'character-creation' }
   | { kind: 'game-session'; campaignId: string };
@@ -42,7 +44,19 @@ export function App(): React.JSX.Element {
 
   switch (view.kind) {
     case 'login':
-      return <LoginPage onLoginSuccess={handleLoginSuccess} />;
+      return (
+        <LoginPage
+          onLoginSuccess={handleLoginSuccess}
+          onNavigateToRegister={() => setView({ kind: 'register' })}
+        />
+      );
+    case 'register':
+      return (
+        <RegisterPage
+          onRegisterSuccess={handleLoginSuccess}
+          onNavigateToLogin={() => setView({ kind: 'login' })}
+        />
+      );
     case 'campaigns':
       return (
         <CampaignListPage

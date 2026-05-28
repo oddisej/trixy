@@ -13,7 +13,7 @@ import type { AuthService } from '../auth/auth-service.js';
 import type { CampaignManager } from '../session/campaign-manager.js';
 import type { SessionService } from '../session/session-service.js';
 import type { GameEngine, EngineResponse, PlayerMessageInput } from '../game-engine/game-engine.js';
-import type { AuthenticatedContext, JwtProvider } from './middleware.js';
+import type { JwtProvider } from './middleware.js';
 import { authenticateRequest } from './middleware.js';
 
 // ─── Request/Response Types ──────────────────────────────────────────────────
@@ -123,7 +123,7 @@ function createRegisterHandler(deps: ApiDependencies): RouteHandler {
     }
 
     const result: AuthResult = await deps.authService.register({ email, password });
-    return mapAuthResult(result);
+    return mapAuthResult(result, deps.jwtProvider);
   };
 }
 
@@ -136,7 +136,7 @@ function createLoginHandler(deps: ApiDependencies): RouteHandler {
     }
 
     const result: AuthResult = await deps.authService.login({ email, password });
-    return mapAuthResult(result);
+    return mapAuthResult(result, deps.jwtProvider);
   };
 }
 
@@ -154,7 +154,7 @@ function createOAuthHandler(deps: ApiDependencies): RouteHandler {
     }
 
     const result: AuthResult = await deps.authService.loginWithProvider(provider, idToken);
-    return mapAuthResult(result);
+    return mapAuthResult(result, deps.jwtProvider);
   };
 }
 
@@ -263,32 +263,38 @@ function createHandleMessageHandler(deps: ApiDependencies): RouteHandler {
 
 // ─── Response Mappers ────────────────────────────────────────────────────────
 
-function mapAuthResult(result: AuthResult): ApiResponse {
+function mapAuthResult(result: AuthResult, jwtProvider?: JwtProvider): ApiResponse {
   switch (result.kind) {
-    case 'ok':
+    case 'ok': {
+      // Sign a proper JWT token if provider is available
+      const token = jwtProvider
+        ? jwtProvider.sign({ userId: result.userId })
+        : result.accessToken;
       return {
         status: 200,
         body: {
+          kind: 'ok',
           userId: result.userId,
-          accessToken: result.accessToken,
+          accessToken: token,
           refreshToken: result.refreshToken,
         },
       };
+    }
     case 'invalid_credentials':
-      return { status: 401, body: { error: 'invalid_credentials' } };
+      return { status: 401, body: { kind: 'invalid_credentials' } };
     case 'account_locked':
       return {
         status: 423,
-        body: { error: 'account_locked', remainingSeconds: result.remainingSeconds },
+        body: { kind: 'account_locked', remainingSeconds: result.remainingSeconds },
       };
     case 'email_in_use':
-      return { status: 409, body: { error: 'email_in_use' } };
+      return { status: 409, body: { kind: 'email_in_use' } };
     case 'invalid_email_format':
-      return { status: 422, body: { error: 'invalid_email_format' } };
+      return { status: 422, body: { kind: 'invalid_email_format' } };
     case 'invalid_password_format':
-      return { status: 422, body: { error: 'invalid_password_format' } };
+      return { status: 422, body: { kind: 'invalid_password_format' } };
     case 'provider_unavailable':
-      return { status: 503, body: { error: 'provider_unavailable' } };
+      return { status: 503, body: { kind: 'provider_unavailable' } };
   }
 }
 

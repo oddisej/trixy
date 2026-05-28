@@ -1,0 +1,19 @@
+@startuml C1_System_Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title System Context Diagram – Trixy AI RPG
+
+Person(player, "Player", "Plays the AI-driven D&D-style RPG via mobile or web")
+
+System(trixy, "Trixy AI RPG", "AI-powered tabletop RPG with LLM Game Master, dice mechanics, character progression, and content filtering")
+
+System_Ext(llm_provider, "LLM Provider", "OpenAI / Anthropic / Mistral – generates narration and NPC dialogue")
+System_Ext(stt_provider, "Speech-to-Text Provider", "Transcribes voice input to text")
+System_Ext(oauth_provider, "OAuth Provider", "Google / Apple – handles social login")
+
+Rel(player, trixy, "Plays game via", "HTTPS / WebSocket")
+Rel(trixy, llm_provider, "Requests narration", "HTTPS")
+Rel(trixy, stt_provider, "Sends audio for transcription", "HTTPS")
+Rel(trixy, oauth_provider, "Authenticates users", "HTTPS / OAuth 2.0")
+
+@enduml

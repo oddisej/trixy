@@ -20,8 +20,8 @@ export function CharacterCreationPage({
 }: CharacterCreationPageProps): React.JSX.Element {
   const api = useApi();
   const [name, setName] = useState('');
-  const [race, setRace] = useState<Race>(RACES[0]);
-  const [charClass, setCharClass] = useState<CharacterClass>(CLASSES[0]);
+  const [race, setRace] = useState<Race>(RACES[0]!);
+  const [charClass, setCharClass] = useState<CharacterClass>(CLASSES[0]!);
   const [attributes, setAttributes] = useState<Record<AttributeKey, number>>({
     strength: 10,
     dexterity: 10,

@@ -11,7 +11,6 @@
  */
 
 import type { AuthenticatedContext, JwtProvider } from './middleware.js';
-import { extractBearerToken } from './middleware.js';
 import type { EngineResponse } from '../game-engine/game-engine.js';
 import type { ActionResolution } from '@trixy/shared';
 
@@ -174,7 +173,7 @@ export class WebSocketHandler {
         this.sender.send(connection.id, {
           type: 'narration_chunk',
           sessionId,
-          text: chunks[i],
+          text: chunks[i]!,
           index: i,
         });
       }

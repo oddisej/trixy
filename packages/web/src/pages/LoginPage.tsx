@@ -8,9 +8,10 @@ import { useApi } from '../hooks/useApi';
 
 export interface LoginPageProps {
   onLoginSuccess: (userId: string) => void;
+  onNavigateToRegister: () => void;
 }
 
-export function LoginPage({ onLoginSuccess }: LoginPageProps): React.JSX.Element {
+export function LoginPage({ onLoginSuccess, onNavigateToRegister }: LoginPageProps): React.JSX.Element {
   const api = useApi();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -120,6 +121,13 @@ export function LoginPage({ onLoginSuccess }: LoginPageProps): React.JSX.Element
           Apple
         </button>
       </div>
+
+      <p>
+        Don&apos;t have an account?{' '}
+        <button type="button" onClick={onNavigateToRegister} className="link-button">
+          Register
+        </button>
+      </p>
     </div>
   );
 }
