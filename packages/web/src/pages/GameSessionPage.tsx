@@ -29,12 +29,13 @@ export function GameSessionPage({ campaignId }: GameSessionPageProps): React.JSX
     async function loadSession() {
       try {
         const session = await api.loadSession(campaignId);
-        if (!cancelled) {
+        if (!cancelled && session?.conversation) {
           setMessages(session.conversation);
         }
       } catch {
         if (!cancelled) {
-          setError('Failed to load session.');
+          // New campaign — no session yet, start with empty messages
+          setMessages([]);
         }
       }
     }
