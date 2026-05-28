@@ -6,10 +6,9 @@
  */
 
 import React, { useState, useCallback } from 'react';
-import { useApi } from '../hooks/useApi';
 
 export interface CharacterCreationPageProps {
-  onCharacterCreated: (characterId: string) => void;
+  onCharacterCreated: (character: { name: string; className: string; attributes: Record<string, number> }) => void;
 }
 
 const CLASSES = [
@@ -74,7 +73,6 @@ function applyClassModifiers(
 export function CharacterCreationPage({
   onCharacterCreated,
 }: CharacterCreationPageProps): React.JSX.Element {
-  const api = useApi();
   const [name, setName] = useState('');
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [attributes, setAttributes] = useState<Record<string, { total: number; dice: number[] }> | null>(null);
@@ -91,7 +89,7 @@ export function CharacterCreationPage({
     }, 600);
   }, []);
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
 
@@ -116,14 +114,11 @@ export function CharacterCreationPage({
         attrValues[key] = val.final;
       }
 
-      const character = await api.createCharacter({
+      onCharacterCreated({
         name: name.trim(),
-        race: selectedClass, // using class as the main choice
-        class: selectedClass,
+        className: selectedClass,
         attributes: attrValues,
-        backgroundStory: '',
       });
-      onCharacterCreated(character.id);
     } catch {
       setError('Charakter konnte nicht erstellt werden.');
     } finally {
