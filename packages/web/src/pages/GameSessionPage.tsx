@@ -107,28 +107,84 @@ interface InventoryItem {
   name: string;
   icon: string;
   description: string;
+  actions: ItemAction[];
+}
+
+interface ItemAction {
+  label: string;
+  effect: string;
 }
 
 const STARTING_ITEMS: Record<string, InventoryItem[]> = {
   zwerg: [
-    { id: 'axe', name: 'Kriegsaxt', icon: '🪓', description: 'Eine schwere Axt aus Zwergenstahl.' },
-    { id: 'shield', name: 'Steinschild', icon: '🛡️', description: 'Ein robuster Schild aus Granit.' },
-    { id: 'potion', name: 'Heiltrank', icon: '🧪', description: 'Stellt 20 HP wieder her.' },
+    { id: 'axe', name: 'Kriegsaxt', icon: '🪓', description: 'Eine schwere Axt aus Zwergenstahl. +3 Angriffsschaden.', actions: [
+      { label: 'Angreifen', effect: 'Du schwingst deine Kriegsaxt mit voller Wucht.' },
+      { label: 'Untersuchen', effect: 'Die Axt trägt Runen der Zwerge. Sie ist alt aber scharf.' },
+    ]},
+    { id: 'shield', name: 'Steinschild', icon: '🛡️', description: 'Ein robuster Schild aus Granit. +2 Verteidigung.', actions: [
+      { label: 'Verteidigen', effect: 'Du hebst deinen Schild und blockierst den Angriff.' },
+      { label: 'Untersuchen', effect: 'Der Schild ist aus einem einzigen Felsblock gehauen.' },
+    ]},
+    { id: 'potion', name: 'Heiltrank', icon: '🧪', description: 'Stellt 20 HP wieder her.', actions: [
+      { label: 'Trinken', effect: 'Du trinkst den Heiltrank und fühlst dich besser. +20 HP.' },
+      { label: 'Untersuchen', effect: 'Eine rote Flüssigkeit die nach Kräutern riecht.' },
+    ]},
   ],
   ritter: [
-    { id: 'sword', name: 'Langschwert', icon: '⚔️', description: 'Ein edles Schwert mit scharfer Klinge.' },
-    { id: 'armor', name: 'Kettenhemd', icon: '🛡️', description: 'Bietet guten Schutz im Kampf.' },
-    { id: 'potion', name: 'Heiltrank', icon: '🧪', description: 'Stellt 20 HP wieder her.' },
+    { id: 'sword', name: 'Langschwert', icon: '⚔️', description: 'Ein edles Schwert mit scharfer Klinge. +3 Angriffsschaden.', actions: [
+      { label: 'Angreifen', effect: 'Du führst einen präzisen Schwerthieb aus.' },
+      { label: 'Untersuchen', effect: 'Das Schwert trägt das Wappen deines Hauses.' },
+    ]},
+    { id: 'armor', name: 'Kettenhemd', icon: '🛡️', description: 'Bietet guten Schutz. +3 Verteidigung.', actions: [
+      { label: 'Anlegen', effect: 'Du trägst das Kettenhemd bereits.' },
+      { label: 'Untersuchen', effect: 'Fein geschmiedete Ringe aus Stahl, eng verwoben.' },
+    ]},
+    { id: 'potion', name: 'Heiltrank', icon: '🧪', description: 'Stellt 20 HP wieder her.', actions: [
+      { label: 'Trinken', effect: 'Du trinkst den Heiltrank und fühlst dich besser. +20 HP.' },
+      { label: 'Untersuchen', effect: 'Eine rote Flüssigkeit die nach Kräutern riecht.' },
+    ]},
   ],
   magier: [
-    { id: 'staff', name: 'Zauberstab', icon: '🪄', description: 'Verstärkt magische Angriffe.' },
-    { id: 'book', name: 'Zauberbuch', icon: '📖', description: 'Enthält mächtige Sprüche.' },
-    { id: 'potion', name: 'Manatrank', icon: '🧪', description: 'Stellt magische Energie wieder her.' },
+    { id: 'staff', name: 'Zauberstab', icon: '🪄', description: 'Verstärkt magische Angriffe. +3 Magieschaden.', actions: [
+      { label: 'Zaubern', effect: 'Du kanalisierst Energie durch den Stab.' },
+      { label: 'Untersuchen', effect: 'Der Stab pulsiert mit arkaner Energie. Ein Amethyst sitzt an der Spitze.' },
+    ]},
+    { id: 'book', name: 'Zauberbuch', icon: '📖', description: 'Enthält deine Zaubersprüche.', actions: [
+      { label: 'Zauber ansehen', effect: 'SPELLS' },
+      { label: 'Untersuchen', effect: 'Ein in Leder gebundenes Buch mit leuchtenden Runen auf dem Einband.' },
+    ]},
+    { id: 'potion', name: 'Manatrank', icon: '🧪', description: 'Stellt magische Energie wieder her.', actions: [
+      { label: 'Trinken', effect: 'Du trinkst den Manatrank. Deine Magie fühlt sich stärker an.' },
+      { label: 'Untersuchen', effect: 'Eine blaue, schimmernde Flüssigkeit.' },
+    ]},
   ],
   barde: [
-    { id: 'lute', name: 'Laute', icon: '🎵', description: 'Ein fein gestimmtes Instrument.' },
-    { id: 'dagger', name: 'Dolch', icon: '🗡️', description: 'Klein aber tödlich.' },
-    { id: 'potion', name: 'Heiltrank', icon: '🧪', description: 'Stellt 20 HP wieder her.' },
+    { id: 'lute', name: 'Laute', icon: '🎵', description: 'Ein fein gestimmtes Instrument. +2 Charisma-Bonus.', actions: [
+      { label: 'Spielen', effect: 'Du spielst eine Melodie. Alle Zuhörer sind verzaubert.' },
+      { label: 'Untersuchen', effect: 'Eine Laute aus Eichenholz mit Silbersaiten.' },
+    ]},
+    { id: 'dagger', name: 'Dolch', icon: '🗡️', description: 'Klein aber tödlich. +2 Angriffsschaden.', actions: [
+      { label: 'Angreifen', effect: 'Du stichst schnell und präzise zu.' },
+      { label: 'Untersuchen', effect: 'Ein vergifteter Dolch mit Elfenbeingriff.' },
+    ]},
+    { id: 'potion', name: 'Heiltrank', icon: '🧪', description: 'Stellt 20 HP wieder her.', actions: [
+      { label: 'Trinken', effect: 'Du trinkst den Heiltrank und fühlst dich besser. +20 HP.' },
+      { label: 'Untersuchen', effect: 'Eine rote Flüssigkeit die nach Kräutern riecht.' },
+    ]},
+  ],
+};
+
+const SPELLS: Record<string, { name: string; icon: string; description: string }[]> = {
+  magier: [
+    { name: 'Feuerball', icon: '🔥', description: 'Schleudert einen Feuerball auf den Gegner. Hoher Schaden.' },
+    { name: 'Eisschild', icon: '🧊', description: 'Erschafft einen Schild aus Eis. Blockiert einen Angriff.' },
+    { name: 'Blitz', icon: '⚡', description: 'Ein Blitz trifft den Gegner. Mittlerer Schaden, schnell.' },
+    { name: 'Telekinese', icon: '🌀', description: 'Bewegt Objekte mit Gedankenkraft.' },
+  ],
+  barde: [
+    { name: 'Schlummerlied', icon: '💤', description: 'Versetzt Gegner in Schlaf.' },
+    { name: 'Spottlied', icon: '😤', description: 'Provoziert den Gegner und senkt seine Verteidigung.' },
+    { name: 'Heilmelodie', icon: '💚', description: 'Heilt dich oder einen Verbündeten um 10 HP.' },
   ],
 };
 
@@ -142,6 +198,9 @@ export function GameSessionPage({ character, onBack }: GameSessionPageProps): Re
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
   const [showInventory, setShowInventory] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [showSpells, setShowSpells] = useState(false);
+  const [showStats, setShowStats] = useState(false);
   const [inventory] = useState<InventoryItem[]>(STARTING_ITEMS[character.className] ?? STARTING_ITEMS.ritter);
   const maxHP = calculateMaxHP(character.attributes);
   const [currentHP, setCurrentHP] = useState(maxHP);
@@ -217,21 +276,113 @@ export function GameSessionPage({ character, onBack }: GameSessionPageProps): Re
         <div style={styles.inventoryPanel}>
           <div style={styles.inventoryHeader}>
             <h2 style={styles.inventoryTitle}>🎒 Inventar</h2>
-            <button type="button" onClick={() => setShowInventory(false)} style={styles.closeButton}>✕</button>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button type="button" onClick={() => { setShowStats(!showStats); setSelectedItem(null); setShowSpells(false); }} style={styles.statsToggle}>
+                📊
+              </button>
+              <button type="button" onClick={() => setShowInventory(false)} style={styles.closeButton}>✕</button>
+            </div>
           </div>
-          <div style={styles.inventoryGrid}>
-            {inventory.map((item) => (
-              <div key={item.id} style={styles.inventoryItem}>
-                <span style={styles.itemIcon}>{item.icon}</span>
-                <div style={styles.itemInfo}>
-                  <span style={styles.itemName}>{item.name}</span>
-                  <span style={styles.itemDesc}>{item.description}</span>
+
+          {/* Stats View */}
+          {showStats && (
+            <div style={styles.statsPanel}>
+              <h3 style={styles.statsTitle}>Attribute</h3>
+              {Object.entries(character.attributes).map(([key, value]) => {
+                const modifier = Math.floor((value - 10) / 2);
+                const labels: Record<string, string> = { strength: '💪 Stärke', dexterity: '🤸 Geschick', constitution: '❤️ Konstitution', intelligence: '🧠 Intelligenz', wisdom: '👁️ Weisheit', charisma: '✨ Charisma' };
+                return (
+                  <div key={key} style={styles.statRow}>
+                    <span style={styles.statLabel}>{labels[key] ?? key}</span>
+                    <span style={styles.statValue}>{value}</span>
+                    <span style={{ ...styles.statMod, color: modifier >= 0 ? '#34d399' : '#f87171' }}>
+                      ({modifier >= 0 ? '+' : ''}{modifier})
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Spells View */}
+          {showSpells && (
+            <div style={styles.spellsPanel}>
+              <button type="button" onClick={() => setShowSpells(false)} style={styles.spellBack}>← Zurück</button>
+              <h3 style={styles.spellsTitle}>📖 Zaubersprüche</h3>
+              {(SPELLS[character.className] ?? []).map((spell) => (
+                <div key={spell.name} style={styles.spellItem}>
+                  <span style={styles.spellIcon}>{spell.icon}</span>
+                  <div>
+                    <span style={styles.spellName}>{spell.name}</span>
+                    <span style={styles.spellDesc}>{spell.description}</span>
+                  </div>
+                </div>
+              ))}
+              {!(SPELLS[character.className]) && (
+                <p style={styles.emptyInventory}>Deine Klasse hat keine Zauber.</p>
+              )}
+            </div>
+          )}
+
+          {/* Item Detail View */}
+          {selectedItem && !showSpells && !showStats && (
+            <div style={styles.itemDetail}>
+              <button type="button" onClick={() => setSelectedItem(null)} style={styles.spellBack}>← Zurück</button>
+              <div style={styles.itemDetailHeader}>
+                <span style={{ fontSize: '40px' }}>{selectedItem.icon}</span>
+                <div>
+                  <h3 style={styles.itemDetailName}>{selectedItem.name}</h3>
+                  <p style={styles.itemDetailDesc}>{selectedItem.description}</p>
                 </div>
               </div>
-            ))}
-          </div>
-          {inventory.length === 0 && (
-            <p style={styles.emptyInventory}>Dein Inventar ist leer.</p>
+              <div style={styles.itemActions}>
+                {selectedItem.actions.map((action) => (
+                  <button
+                    key={action.label}
+                    type="button"
+                    onClick={() => {
+                      if (action.effect === 'SPELLS') {
+                        setShowSpells(true);
+                        setSelectedItem(null);
+                      } else {
+                        // Use item: add effect as GM message
+                        const msg: Message = { id: `gm-item-${Date.now()}`, role: 'gm', text: action.effect };
+                        setMessages((prev) => [...prev, msg]);
+                        if (action.label === 'Trinken' && selectedItem.name.includes('Heiltrank')) {
+                          setCurrentHP((prev) => Math.min(maxHP, prev + 20));
+                        }
+                        setSelectedItem(null);
+                        setShowInventory(false);
+                      }
+                    }}
+                    style={styles.actionButton}
+                  >
+                    {action.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Item List */}
+          {!selectedItem && !showSpells && !showStats && (
+            <div style={styles.inventoryGrid}>
+              {inventory.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => setSelectedItem(item)}
+                  style={styles.inventoryItem}
+                >
+                  <span style={styles.itemIcon}>{item.icon}</span>
+                  <div style={styles.itemInfo}>
+                    <span style={styles.itemName}>{item.name}</span>
+                    <span style={styles.itemDesc}>{item.description}</span>
+                  </div>
+                  <span style={styles.itemArrow}>→</span>
+                </button>
+              ))}
+            </div>
           )}
         </div>
       )}
@@ -413,6 +564,10 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'rgba(139, 92, 246, 0.08)',
     border: '1px solid rgba(139, 92, 246, 0.15)',
     borderRadius: '10px',
+    cursor: 'pointer',
+    width: '100%',
+    textAlign: 'left' as const,
+    transition: 'border-color 0.2s',
   },
   itemIcon: {
     fontSize: '28px',
@@ -423,6 +578,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column' as const,
     gap: '2px',
+    flex: 1,
   },
   itemName: {
     fontSize: '14px',
@@ -433,11 +589,141 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '11px',
     color: '#8b7faa',
   },
+  itemArrow: {
+    color: '#a78bfa',
+    fontSize: '16px',
+  },
   emptyInventory: {
     textAlign: 'center' as const,
     color: '#6b5b8a',
     fontSize: '14px',
     padding: '20px',
+  },
+  statsToggle: {
+    background: 'rgba(139, 92, 246, 0.15)',
+    border: '1px solid rgba(139, 92, 246, 0.3)',
+    borderRadius: '6px',
+    padding: '4px 8px',
+    fontSize: '16px',
+    cursor: 'pointer',
+  },
+  statsPanel: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '8px',
+  },
+  statsTitle: {
+    fontSize: '14px',
+    fontWeight: '700',
+    color: '#a78bfa',
+    margin: '0 0 8px 0',
+  },
+  statRow: {
+    display: 'flex',
+    alignItems: 'center',
+    padding: '6px 0',
+    borderBottom: '1px solid rgba(139, 92, 246, 0.1)',
+  },
+  statLabel: {
+    flex: 1,
+    fontSize: '13px',
+    color: '#e2d9f3',
+  },
+  statValue: {
+    fontSize: '16px',
+    fontWeight: '700',
+    color: '#e2d9f3',
+    minWidth: '30px',
+    textAlign: 'center' as const,
+  },
+  statMod: {
+    fontSize: '12px',
+    fontWeight: '600',
+    minWidth: '36px',
+    textAlign: 'right' as const,
+  },
+  spellsPanel: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '10px',
+  },
+  spellBack: {
+    background: 'none',
+    border: 'none',
+    color: '#a78bfa',
+    fontSize: '13px',
+    cursor: 'pointer',
+    padding: '0 0 8px 0',
+    textAlign: 'left' as const,
+  },
+  spellsTitle: {
+    fontSize: '14px',
+    fontWeight: '700',
+    color: '#a78bfa',
+    margin: 0,
+  },
+  spellItem: {
+    display: 'flex',
+    alignItems: 'flex-start',
+    gap: '10px',
+    padding: '8px 10px',
+    background: 'rgba(139, 92, 246, 0.08)',
+    borderRadius: '8px',
+  },
+  spellIcon: {
+    fontSize: '22px',
+    marginTop: '2px',
+  },
+  spellName: {
+    display: 'block',
+    fontSize: '13px',
+    fontWeight: '600',
+    color: '#e2d9f3',
+  },
+  spellDesc: {
+    display: 'block',
+    fontSize: '11px',
+    color: '#8b7faa',
+    marginTop: '2px',
+  },
+  itemDetail: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '12px',
+  },
+  itemDetailHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '14px',
+  },
+  itemDetailName: {
+    fontSize: '16px',
+    fontWeight: '700',
+    color: '#e2d9f3',
+    margin: 0,
+  },
+  itemDetailDesc: {
+    fontSize: '12px',
+    color: '#8b7faa',
+    margin: '4px 0 0 0',
+  },
+  itemActions: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '8px',
+    marginTop: '8px',
+  },
+  actionButton: {
+    padding: '12px 16px',
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#e2d9f3',
+    background: 'rgba(139, 92, 246, 0.15)',
+    border: '1px solid rgba(139, 92, 246, 0.3)',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    textAlign: 'left' as const,
+    transition: 'all 0.2s',
   },
   title: {
     fontSize: '16px',
