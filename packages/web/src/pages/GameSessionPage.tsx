@@ -190,7 +190,7 @@ const SPELLS: Record<string, { name: string; icon: string; description: string }
 
 function calculateMaxHP(attributes: Record<string, number>): number {
   const constitution = attributes.constitution ?? 10;
-  return 20 + constitution; // Base 20 + CON
+  return constitution;
 }
 
 export function GameSessionPage({ character, onBack }: GameSessionPageProps): React.JSX.Element {
