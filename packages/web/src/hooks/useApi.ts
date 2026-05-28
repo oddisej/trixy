@@ -82,8 +82,10 @@ export function useApi(): ApiHook {
       return result.campaigns ?? [];
     },
 
-    createCampaign: (characterId, title) =>
-      request<Campaign>('POST', '/campaigns', { characterId, title }),
+    createCampaign: async (characterId, title) => {
+      const result = await request<{ campaign: Campaign }>('POST', '/campaigns', { characterId, title });
+      return result.campaign;
+    },
 
     loadSession: (campaignId) =>
       request<SessionState>('GET', `/sessions/${campaignId}`),

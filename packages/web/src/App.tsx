@@ -2,7 +2,7 @@
  * App.tsx — main app with routing between Login, CharacterCreation,
  * CampaignList, and GameSession views.
  *
- * Uses a simple state-based router (no external routing library needed for this scaffold).
+ * Flow: Login → Campaigns → New Campaign (Character Creation → auto-create Campaign) → Game Session
  */
 
 import React, { useState } from 'react';
@@ -11,6 +11,7 @@ import { RegisterPage } from './pages/RegisterPage';
 import { CharacterCreationPage } from './pages/CharacterCreationPage';
 import { CampaignListPage } from './pages/CampaignListPage';
 import { GameSessionPage } from './pages/GameSessionPage';
+import { useApi } from './hooks/useApi';
 
 type AppView =
   | { kind: 'login' }
@@ -22,6 +23,7 @@ type AppView =
 export function App(): React.JSX.Element {
   const [view, setView] = useState<AppView>({ kind: 'login' });
   const [_userId, setUserId] = useState<string | null>(null);
+  const api = useApi();
 
   function handleLoginSuccess(userId: string) {
     setUserId(userId);
@@ -36,10 +38,15 @@ export function App(): React.JSX.Element {
     setView({ kind: 'character-creation' });
   }
 
-  function handleCharacterCreated(_characterId: string) {
-    // After character creation, go back to campaign list
-    // (in a full implementation, this would create a campaign with the character)
-    setView({ kind: 'campaigns' });
+  async function handleCharacterCreated(characterId: string) {
+    // After character creation, automatically create a campaign with this character
+    try {
+      const campaign = await api.createCampaign(characterId, 'New Adventure');
+      setView({ kind: 'game-session', campaignId: campaign.id });
+    } catch {
+      // If campaign creation fails, go back to campaign list
+      setView({ kind: 'campaigns' });
+    }
   }
 
   switch (view.kind) {

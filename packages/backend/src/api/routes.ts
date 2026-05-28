@@ -202,8 +202,8 @@ function createCreateCampaignHandler(deps: ApiDependencies): RouteHandler {
     const result = await deps.campaignManager.createCampaign(authResult.context.userId, {
       characterId,
       title,
-      setting: setting as any,
-      worldState: worldState as any,
+      setting: (setting ?? { description: 'A new adventure begins...', location: 'Unknown' }) as any,
+      worldState: (worldState ?? { knownNPCs: [], knownLocations: [], establishedFacts: [], timeline: [] }) as any,
     });
 
     if ('kind' in result && result.kind === 'capacity_exceeded') {
