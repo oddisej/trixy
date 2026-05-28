@@ -158,6 +158,7 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
   const matched = matchRoute(method, path);
 
   if (!matched) {
+    console.log(`[${method}] ${path} → 404 Not Found`);
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'not_found' }));
     return;
@@ -179,10 +180,12 @@ const server = createServer(async (req: IncomingMessage, res: ServerResponse) =>
 
     const apiRes: ApiResponse = await matched.route.handler(apiReq);
 
+    console.log(`[${method}] ${path} → ${apiRes.status} ${JSON.stringify(apiRes.body).slice(0, 200)}`);
+
     res.writeHead(apiRes.status, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(apiRes.body));
   } catch (err) {
-    console.error('Request error:', err);
+    console.error(`[${method}] ${path} → 500 ERROR:`, err);
     res.writeHead(500, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'internal_server_error' }));
   }
