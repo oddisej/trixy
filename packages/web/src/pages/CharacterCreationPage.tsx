@@ -13,11 +13,14 @@ export interface CharacterCreationPageProps {
 }
 
 const CLASSES = [
-  { value: 'zwerg', icon: '⚒️', name: 'Zwerg' },
-  { value: 'ritter', icon: '🛡️', name: 'Ritter' },
-  { value: 'magier', icon: '🔮', name: 'Magier' },
-  { value: 'barde', icon: '🎵', name: 'Barde' },
+  { value: 'zwerg', icon: '⚒️', name: 'Zwerg', bonus: 'strength', malus: 'intelligence' },
+  { value: 'ritter', icon: '🛡️', name: 'Ritter', bonus: 'dexterity', malus: 'charisma' },
+  { value: 'magier', icon: '🔮', name: 'Magier', bonus: 'intelligence', malus: 'strength' },
+  { value: 'barde', icon: '🎵', name: 'Barde', bonus: 'charisma', malus: 'dexterity' },
 ];
+
+/** Class bonuses: +2 to bonus attribute, -2 to malus attribute */
+const CLASS_MODIFIER = 2;
 
 const ATTRIBUTE_NAMES = [
   { key: 'strength', de: 'Stärke', icon: '💪' },
@@ -42,6 +45,28 @@ function rollAllAttributes(): Record<string, { total: number; dice: number[] }> 
   const result: Record<string, { total: number; dice: number[] }> = {};
   for (const attr of ATTRIBUTE_NAMES) {
     result[attr.key] = roll4d6DropLowest();
+  }
+  return result;
+}
+
+/**
+ * Applies class modifiers to rolled attributes.
+ * Returns the final values with bonus/malus applied.
+ */
+function applyClassModifiers(
+  rolled: Record<string, { total: number; dice: number[] }>,
+  classValue: string | null,
+): Record<string, { total: number; dice: number[]; modifier: number; final: number }> {
+  const classInfo = CLASSES.find((c) => c.value === classValue);
+  const result: Record<string, { total: number; dice: number[]; modifier: number; final: number }> = {};
+
+  for (const [key, val] of Object.entries(rolled)) {
+    let modifier = 0;
+    if (classInfo) {
+      if (key === classInfo.bonus) modifier = CLASS_MODIFIER;
+      if (key === classInfo.malus) modifier = -CLASS_MODIFIER;
+    }
+    result[key] = { ...val, modifier, final: Math.max(1, Math.min(20, val.total + modifier)) };
   }
   return result;
 }
@@ -85,9 +110,10 @@ export function CharacterCreationPage({
 
     setLoading(true);
     try {
+      const modified = applyClassModifiers(attributes, selectedClass);
       const attrValues: Record<string, number> = {};
-      for (const [key, val] of Object.entries(attributes)) {
-        attrValues[key] = val.total;
+      for (const [key, val] of Object.entries(modified)) {
+        attrValues[key] = val.final;
       }
 
       const character = await api.createCharacter({
@@ -145,6 +171,9 @@ export function CharacterCreationPage({
                 >
                   <span style={styles.classIcon}>{c.icon}</span>
                   <span style={styles.className}>{c.name}</span>
+                  <span style={styles.classBonus}>
+                    +{CLASS_MODIFIER} {ATTRIBUTE_NAMES.find(a => a.key === c.bonus)?.de}
+                  </span>
                 </button>
               ))}
             </div>
@@ -169,6 +198,12 @@ export function CharacterCreationPage({
               <div style={styles.attrGrid}>
                 {ATTRIBUTE_NAMES.map((attr) => {
                   const roll = attributes[attr.key];
+                  const modified = applyClassModifiers(attributes, selectedClass);
+                  const attrData = modified[attr.key];
+                  const sorted = [...roll.dice].sort((a, b) => a - b);
+                  const droppedValue = sorted[0];
+                  let droppedUsed = false;
+
                   return (
                     <div key={attr.key} style={styles.attrRow}>
                       <div style={styles.attrLabel}>
@@ -178,17 +213,14 @@ export function CharacterCreationPage({
                       <div style={styles.attrRight}>
                         <span style={styles.attrDice}>
                           {roll.dice.map((d, i) => {
-                            const isDropped = i === roll.dice.indexOf(Math.min(...roll.dice)) && roll.dice.filter(x => x === Math.min(...roll.dice)).length > 0;
-                            // Find the actual dropped index (lowest sorted)
-                            const sorted = [...roll.dice].sort((a, b) => a - b);
-                            const droppedValue = sorted[0];
-                            let droppedFound = false;
+                            const isDropped = d === droppedValue && !droppedUsed;
+                            if (isDropped) droppedUsed = true;
                             return (
                               <span
                                 key={i}
                                 style={{
                                   ...styles.die,
-                                  ...(d === droppedValue && !droppedFound ? (() => { droppedFound = true; return styles.dieDropped; })() : {}),
+                                  ...(isDropped ? styles.dieDropped : {}),
                                 }}
                               >
                                 {d}
@@ -196,7 +228,15 @@ export function CharacterCreationPage({
                             );
                           })}
                         </span>
-                        <span style={styles.attrTotal}>{roll.total}</span>
+                        {attrData.modifier !== 0 && (
+                          <span style={{
+                            ...styles.attrModifier,
+                            color: attrData.modifier > 0 ? '#34d399' : '#f87171',
+                          }}>
+                            {attrData.modifier > 0 ? `+${attrData.modifier}` : attrData.modifier}
+                          </span>
+                        )}
+                        <span style={styles.attrTotal}>{attrData.final}</span>
                       </div>
                     </div>
                   );
@@ -329,6 +369,11 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: '13px',
     fontWeight: '600',
   },
+  classBonus: {
+    fontSize: '10px',
+    color: '#34d399',
+    marginTop: '2px',
+  },
   attrHeader: {
     display: 'flex',
     alignItems: 'center',
@@ -408,6 +453,12 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#a78bfa',
     minWidth: '32px',
     textAlign: 'right',
+  },
+  attrModifier: {
+    fontSize: '14px',
+    fontWeight: '700',
+    minWidth: '28px',
+    textAlign: 'center',
   },
   attrPlaceholder: {
     textAlign: 'center',
