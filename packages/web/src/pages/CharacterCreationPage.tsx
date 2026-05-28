@@ -1,58 +1,70 @@
 /**
- * CharacterCreationPage — Dungeon-themed character creation.
+ * CharacterCreationPage — Simplified character creation.
+ * Choose from: Zwerg, Ritter, Magier, Barde.
+ * Attributes are rolled using D&D rules (4d6 drop lowest).
  * Requirements: 4.1
  */
 
-import React, { useState } from 'react';
-import type { Race, CharacterClass, AttributeKey } from '../types';
+import React, { useState, useCallback } from 'react';
 import { useApi } from '../hooks/useApi';
 
 export interface CharacterCreationPageProps {
   onCharacterCreated: (characterId: string) => void;
 }
 
-const RACES: { value: Race; icon: string; name: string }[] = [
-  { value: 'human', icon: '🛡️', name: 'Mensch' },
-  { value: 'elf', icon: '🏹', name: 'Elf' },
-  { value: 'dwarf', icon: '⚒️', name: 'Zwerg' },
+const CLASSES = [
+  { value: 'zwerg', icon: '⚒️', name: 'Zwerg' },
+  { value: 'ritter', icon: '🛡️', name: 'Ritter' },
+  { value: 'magier', icon: '🔮', name: 'Magier' },
+  { value: 'barde', icon: '🎵', name: 'Barde' },
 ];
 
-const CLASSES: { value: CharacterClass; icon: string; name: string }[] = [
-  { value: 'warrior', icon: '⚔️', name: 'Krieger' },
-  { value: 'mage', icon: '🔮', name: 'Magier' },
-  { value: 'rogue', icon: '🗡️', name: 'Schurke' },
+const ATTRIBUTE_NAMES = [
+  { key: 'strength', de: 'Stärke', icon: '💪' },
+  { key: 'dexterity', de: 'Geschick', icon: '🤸' },
+  { key: 'constitution', de: 'Konstitution', icon: '❤️' },
+  { key: 'intelligence', de: 'Intelligenz', icon: '🧠' },
+  { key: 'wisdom', de: 'Weisheit', icon: '👁️' },
+  { key: 'charisma', de: 'Charisma', icon: '✨' },
 ];
 
-const ATTRIBUTE_LABELS: Record<AttributeKey, { de: string; icon: string }> = {
-  strength: { de: 'Stärke', icon: '💪' },
-  dexterity: { de: 'Geschick', icon: '🤸' },
-  intelligence: { de: 'Intelligenz', icon: '🧠' },
-  charisma: { de: 'Charisma', icon: '✨' },
-};
+/**
+ * Rolls 4d6 and drops the lowest die — standard D&D attribute generation.
+ */
+function roll4d6DropLowest(): { total: number; dice: number[] } {
+  const dice = Array.from({ length: 4 }, () => Math.floor(Math.random() * 6) + 1);
+  const sorted = [...dice].sort((a, b) => a - b);
+  const total = sorted[1] + sorted[2] + sorted[3]; // drop lowest
+  return { total, dice };
+}
 
-const ATTRIBUTES: AttributeKey[] = ['strength', 'dexterity', 'intelligence', 'charisma'];
+function rollAllAttributes(): Record<string, { total: number; dice: number[] }> {
+  const result: Record<string, { total: number; dice: number[] }> = {};
+  for (const attr of ATTRIBUTE_NAMES) {
+    result[attr.key] = roll4d6DropLowest();
+  }
+  return result;
+}
 
 export function CharacterCreationPage({
   onCharacterCreated,
 }: CharacterCreationPageProps): React.JSX.Element {
   const api = useApi();
   const [name, setName] = useState('');
-  const [race, setRace] = useState<Race>('human');
-  const [charClass, setCharClass] = useState<CharacterClass>('warrior');
-  const [attributes, setAttributes] = useState<Record<AttributeKey, number>>({
-    strength: 10,
-    dexterity: 10,
-    intelligence: 10,
-    charisma: 10,
-  });
-  const [backgroundStory, setBackgroundStory] = useState('');
+  const [selectedClass, setSelectedClass] = useState<string | null>(null);
+  const [attributes, setAttributes] = useState<Record<string, { total: number; dice: number[] }> | null>(null);
+  const [rolling, setRolling] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  function handleAttributeChange(key: AttributeKey, value: number) {
-    const clamped = Math.max(1, Math.min(20, value));
-    setAttributes((prev) => ({ ...prev, [key]: clamped }));
-  }
+  const handleRoll = useCallback(() => {
+    setRolling(true);
+    // Short animation delay for feel
+    setTimeout(() => {
+      setAttributes(rollAllAttributes());
+      setRolling(false);
+    }, 600);
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -62,23 +74,32 @@ export function CharacterCreationPage({
       setError('Bitte gib einen Namen ein.');
       return;
     }
-    if (backgroundStory.length > 2000) {
-      setError('Die Hintergrundgeschichte ist zu lang (max. 2000 Zeichen).');
+    if (!selectedClass) {
+      setError('Bitte wähle eine Klasse.');
+      return;
+    }
+    if (!attributes) {
+      setError('Bitte würfle deine Attribute.');
       return;
     }
 
     setLoading(true);
     try {
+      const attrValues: Record<string, number> = {};
+      for (const [key, val] of Object.entries(attributes)) {
+        attrValues[key] = val.total;
+      }
+
       const character = await api.createCharacter({
         name: name.trim(),
-        race,
-        class: charClass,
-        attributes,
-        backgroundStory,
+        race: selectedClass, // using class as the main choice
+        class: selectedClass,
+        attributes: attrValues,
+        backgroundStory: '',
       });
       onCharacterCreated(character.id);
     } catch {
-      setError('Charakter konnte nicht erstellt werden. Bitte versuche es erneut.');
+      setError('Charakter konnte nicht erstellt werden.');
     } finally {
       setLoading(false);
     }
@@ -88,9 +109,9 @@ export function CharacterCreationPage({
     <div style={styles.container}>
       <div style={styles.content}>
         <header style={styles.header}>
-          <span style={styles.headerIcon}>🪶</span>
+          <span style={styles.headerIcon}>⚔️</span>
           <h1 style={styles.title}>Charakter erstellen</h1>
-          <p style={styles.subtitle}>Gib deinem Helden ein Gesicht</p>
+          <p style={styles.subtitle}>The Dungeons of Arhenzech</p>
         </header>
 
         <form onSubmit={handleSubmit} style={styles.form}>
@@ -103,99 +124,92 @@ export function CharacterCreationPage({
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              placeholder="z.B. Aragorn"
+              placeholder="Wie heißt dein Charakter?"
               style={styles.input}
             />
           </div>
 
-          {/* Race */}
+          {/* Class Selection */}
           <div style={styles.field}>
-            <label style={styles.label}>Rasse</label>
-            <div style={styles.optionGrid}>
-              {RACES.map((r) => (
-                <button
-                  key={r.value}
-                  type="button"
-                  onClick={() => setRace(r.value)}
-                  style={{
-                    ...styles.optionCard,
-                    ...(race === r.value ? styles.optionCardSelected : {}),
-                  }}
-                >
-                  <span style={styles.optionIcon}>{r.icon}</span>
-                  <span style={styles.optionName}>{r.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Class */}
-          <div style={styles.field}>
-            <label style={styles.label}>Klasse</label>
-            <div style={styles.optionGrid}>
+            <label style={styles.label}>Klasse wählen</label>
+            <div style={styles.classGrid}>
               {CLASSES.map((c) => (
                 <button
                   key={c.value}
                   type="button"
-                  onClick={() => setCharClass(c.value)}
+                  onClick={() => setSelectedClass(c.value)}
                   style={{
-                    ...styles.optionCard,
-                    ...(charClass === c.value ? styles.optionCardSelected : {}),
+                    ...styles.classCard,
+                    ...(selectedClass === c.value ? styles.classCardSelected : {}),
                   }}
                 >
-                  <span style={styles.optionIcon}>{c.icon}</span>
-                  <span style={styles.optionName}>{c.name}</span>
+                  <span style={styles.classIcon}>{c.icon}</span>
+                  <span style={styles.className}>{c.name}</span>
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Attributes */}
-          <fieldset style={styles.fieldset}>
-            <legend style={styles.legend}>Attribute (1–20)</legend>
-            <div style={styles.attributeGrid}>
-              {ATTRIBUTES.map((attr) => {
-                const meta = ATTRIBUTE_LABELS[attr];
-                return (
-                  <div key={attr} style={styles.attributeRow}>
-                    <div style={styles.attributeLabel}>
-                      <span style={styles.attributeIcon}>{meta.icon}</span>
-                      <span>{meta.de}</span>
-                    </div>
-                    <div style={styles.attributeControls}>
-                      <button
-                        type="button"
-                        onClick={() => handleAttributeChange(attr, attributes[attr] - 1)}
-                        style={styles.attrButton}
-                      >−</button>
-                      <span style={styles.attributeValue}>{attributes[attr]}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleAttributeChange(attr, attributes[attr] + 1)}
-                        style={styles.attrButton}
-                      >+</button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </fieldset>
-
-          {/* Background */}
+          {/* Attribute Rolling */}
           <div style={styles.field}>
-            <label htmlFor="background-story" style={styles.label}>
-              Hintergrundgeschichte
-            </label>
-            <textarea
-              id="background-story"
-              value={backgroundStory}
-              onChange={(e) => setBackgroundStory(e.target.value)}
-              maxLength={2000}
-              rows={6}
-              placeholder="Beschreibe die Geschichte deines Charakters..."
-              style={styles.textarea}
-            />
-            <span style={styles.charCount}>{backgroundStory.length}/2000</span>
+            <div style={styles.attrHeader}>
+              <label style={styles.label}>Attribute</label>
+              <button
+                type="button"
+                onClick={handleRoll}
+                disabled={rolling}
+                style={styles.rollButton}
+              >
+                {rolling ? '🎲 Würfelt...' : attributes ? '🎲 Neu würfeln' : '🎲 Attribute würfeln'}
+              </button>
+            </div>
+            <p style={styles.rollHint}>4W6, niedrigsten Würfel streichen (D&D-Regeln)</p>
+
+            {attributes && (
+              <div style={styles.attrGrid}>
+                {ATTRIBUTE_NAMES.map((attr) => {
+                  const roll = attributes[attr.key];
+                  return (
+                    <div key={attr.key} style={styles.attrRow}>
+                      <div style={styles.attrLabel}>
+                        <span style={styles.attrIcon}>{attr.icon}</span>
+                        <span>{attr.de}</span>
+                      </div>
+                      <div style={styles.attrRight}>
+                        <span style={styles.attrDice}>
+                          {roll.dice.map((d, i) => {
+                            const isDropped = i === roll.dice.indexOf(Math.min(...roll.dice)) && roll.dice.filter(x => x === Math.min(...roll.dice)).length > 0;
+                            // Find the actual dropped index (lowest sorted)
+                            const sorted = [...roll.dice].sort((a, b) => a - b);
+                            const droppedValue = sorted[0];
+                            let droppedFound = false;
+                            return (
+                              <span
+                                key={i}
+                                style={{
+                                  ...styles.die,
+                                  ...(d === droppedValue && !droppedFound ? (() => { droppedFound = true; return styles.dieDropped; })() : {}),
+                                }}
+                              >
+                                {d}
+                              </span>
+                            );
+                          })}
+                        </span>
+                        <span style={styles.attrTotal}>{roll.total}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {!attributes && (
+              <div style={styles.attrPlaceholder}>
+                <span style={styles.placeholderIcon}>🎲</span>
+                <p>Klicke auf "Attribute würfeln" um deine Werte zu bestimmen</p>
+              </div>
+            )}
           </div>
 
           {error && (
@@ -204,7 +218,14 @@ export function CharacterCreationPage({
             </div>
           )}
 
-          <button type="submit" disabled={loading} style={styles.submitButton}>
+          <button
+            type="submit"
+            disabled={loading || !selectedClass || !attributes || !name.trim()}
+            style={{
+              ...styles.submitButton,
+              ...(!selectedClass || !attributes || !name.trim() ? styles.submitDisabled : {}),
+            }}
+          >
             {loading ? 'Wird erstellt...' : 'Charakter erstellen'}
           </button>
         </form>
@@ -222,7 +243,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '32px 24px',
   },
   content: {
-    maxWidth: '640px',
+    maxWidth: '580px',
     margin: '0 auto',
   },
   header: {
@@ -239,27 +260,26 @@ const styles: Record<string, React.CSSProperties> = {
   title: {
     fontSize: '28px',
     fontWeight: '800',
-    color: '#e2d9f3',
-    margin: '0 0 4px 0',
     background: 'linear-gradient(135deg, #a78bfa, #c084fc)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
+    margin: '0 0 4px 0',
   },
   subtitle: {
-    fontSize: '14px',
-    color: '#a78bfa',
+    fontSize: '13px',
+    color: '#8b7faa',
     fontStyle: 'italic',
     margin: 0,
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '24px',
+    gap: '28px',
   },
   field: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '8px',
+    gap: '10px',
   },
   label: {
     color: '#a78bfa',
@@ -277,112 +297,131 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#e2d9f3',
     outline: 'none',
   },
-  optionGrid: {
+  classGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(3, 1fr)',
+    gridTemplateColumns: 'repeat(4, 1fr)',
     gap: '10px',
   },
-  optionCard: {
+  classCard: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '6px',
-    padding: '16px 12px',
+    gap: '8px',
+    padding: '20px 12px',
     background: 'rgba(20, 10, 40, 0.6)',
     border: '1px solid rgba(139, 92, 246, 0.2)',
-    borderRadius: '12px',
+    borderRadius: '14px',
     cursor: 'pointer',
     color: '#c4b5fd',
-    fontSize: '13px',
-    fontWeight: '500',
     transition: 'all 0.2s',
   },
-  optionCardSelected: {
+  classCardSelected: {
     background: 'linear-gradient(145deg, rgba(124, 58, 237, 0.3), rgba(109, 40, 217, 0.4))',
-    border: '1px solid rgba(167, 139, 250, 0.6)',
+    border: '1px solid rgba(167, 139, 250, 0.7)',
     color: '#fff',
-    boxShadow: '0 0 20px rgba(124, 58, 237, 0.3)',
+    boxShadow: '0 0 24px rgba(124, 58, 237, 0.4)',
+    transform: 'scale(1.05)',
   },
-  optionIcon: {
-    fontSize: '28px',
+  classIcon: {
+    fontSize: '36px',
   },
-  optionName: {
+  className: {
+    fontSize: '13px',
     fontWeight: '600',
   },
-  fieldset: {
-    border: '1px solid rgba(139, 92, 246, 0.2)',
-    borderRadius: '12px',
-    padding: '16px 20px',
-    background: 'rgba(20, 10, 40, 0.4)',
-  },
-  legend: {
-    color: '#a78bfa',
-    fontSize: '12px',
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: '1px',
-    padding: '0 8px',
-  },
-  attributeGrid: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
-  },
-  attributeRow: {
+  attrHeader: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: '10px 0',
-    borderBottom: '1px solid rgba(139, 92, 246, 0.1)',
   },
-  attributeLabel: {
+  rollButton: {
+    padding: '10px 18px',
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#e2d9f3',
+    background: 'rgba(139, 92, 246, 0.2)',
+    border: '1px solid rgba(139, 92, 246, 0.4)',
+    borderRadius: '10px',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+  },
+  rollHint: {
+    fontSize: '12px',
+    color: '#6b5b8a',
+    margin: 0,
+    fontStyle: 'italic',
+  },
+  attrGrid: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    background: 'rgba(20, 10, 40, 0.5)',
+    borderRadius: '12px',
+    padding: '16px',
+    border: '1px solid rgba(139, 92, 246, 0.15)',
+  },
+  attrRow: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: '8px 0',
+    borderBottom: '1px solid rgba(139, 92, 246, 0.08)',
+  },
+  attrLabel: {
     display: 'flex',
     alignItems: 'center',
     gap: '10px',
     color: '#e2d9f3',
-    fontSize: '15px',
+    fontSize: '14px',
   },
-  attributeIcon: {
-    fontSize: '20px',
+  attrIcon: {
+    fontSize: '18px',
   },
-  attributeControls: {
+  attrRight: {
     display: 'flex',
     alignItems: 'center',
     gap: '12px',
   },
-  attrButton: {
-    width: '32px',
-    height: '32px',
-    borderRadius: '8px',
+  attrDice: {
+    display: 'flex',
+    gap: '4px',
+  },
+  die: {
+    width: '24px',
+    height: '24px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: '4px',
     background: 'rgba(139, 92, 246, 0.15)',
-    border: '1px solid rgba(139, 92, 246, 0.3)',
     color: '#c4b5fd',
-    fontSize: '18px',
-    cursor: 'pointer',
+    fontSize: '12px',
     fontWeight: '600',
   },
-  attributeValue: {
-    minWidth: '40px',
-    textAlign: 'center',
-    fontSize: '20px',
-    fontWeight: '700',
-    color: '#e2d9f3',
+  dieDropped: {
+    opacity: 0.3,
+    textDecoration: 'line-through',
   },
-  textarea: {
-    background: 'rgba(139, 92, 246, 0.08)',
-    border: '1px solid rgba(139, 92, 246, 0.25)',
-    borderRadius: '10px',
-    padding: '14px 16px',
-    fontSize: '14px',
-    color: '#e2d9f3',
-    outline: 'none',
-    fontFamily: 'inherit',
-    resize: 'vertical',
-  },
-  charCount: {
+  attrTotal: {
+    fontSize: '22px',
+    fontWeight: '800',
+    color: '#a78bfa',
+    minWidth: '32px',
     textAlign: 'right',
-    fontSize: '11px',
+  },
+  attrPlaceholder: {
+    textAlign: 'center',
+    padding: '40px 24px',
+    background: 'rgba(20, 10, 40, 0.4)',
+    borderRadius: '12px',
+    border: '1px dashed rgba(139, 92, 246, 0.25)',
     color: '#6b5b8a',
+    fontSize: '14px',
+  },
+  placeholderIcon: {
+    fontSize: '40px',
+    display: 'block',
+    marginBottom: '12px',
   },
   error: {
     background: 'rgba(220, 38, 38, 0.15)',
@@ -405,5 +444,11 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: '12px',
     cursor: 'pointer',
     boxShadow: '0 4px 20px rgba(124, 58, 237, 0.4)',
+    transition: 'all 0.2s',
+  },
+  submitDisabled: {
+    opacity: 0.4,
+    cursor: 'not-allowed',
+    boxShadow: 'none',
   },
 };
