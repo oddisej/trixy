@@ -102,10 +102,49 @@ function generateGMResponse(text: string, character: CharacterData): Message {
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
+interface InventoryItem {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+}
+
+const STARTING_ITEMS: Record<string, InventoryItem[]> = {
+  zwerg: [
+    { id: 'axe', name: 'Kriegsaxt', icon: '🪓', description: 'Eine schwere Axt aus Zwergenstahl.' },
+    { id: 'shield', name: 'Steinschild', icon: '🛡️', description: 'Ein robuster Schild aus Granit.' },
+    { id: 'potion', name: 'Heiltrank', icon: '🧪', description: 'Stellt 20 HP wieder her.' },
+  ],
+  ritter: [
+    { id: 'sword', name: 'Langschwert', icon: '⚔️', description: 'Ein edles Schwert mit scharfer Klinge.' },
+    { id: 'armor', name: 'Kettenhemd', icon: '🛡️', description: 'Bietet guten Schutz im Kampf.' },
+    { id: 'potion', name: 'Heiltrank', icon: '🧪', description: 'Stellt 20 HP wieder her.' },
+  ],
+  magier: [
+    { id: 'staff', name: 'Zauberstab', icon: '🪄', description: 'Verstärkt magische Angriffe.' },
+    { id: 'book', name: 'Zauberbuch', icon: '📖', description: 'Enthält mächtige Sprüche.' },
+    { id: 'potion', name: 'Manatrank', icon: '🧪', description: 'Stellt magische Energie wieder her.' },
+  ],
+  barde: [
+    { id: 'lute', name: 'Laute', icon: '🎵', description: 'Ein fein gestimmtes Instrument.' },
+    { id: 'dagger', name: 'Dolch', icon: '🗡️', description: 'Klein aber tödlich.' },
+    { id: 'potion', name: 'Heiltrank', icon: '🧪', description: 'Stellt 20 HP wieder her.' },
+  ],
+};
+
+function calculateMaxHP(attributes: Record<string, number>): number {
+  const constitution = attributes.constitution ?? 10;
+  return 20 + constitution; // Base 20 + CON
+}
+
 export function GameSessionPage({ character, onBack }: GameSessionPageProps): React.JSX.Element {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showInventory, setShowInventory] = useState(false);
+  const [inventory] = useState<InventoryItem[]>(STARTING_ITEMS[character.className] ?? STARTING_ITEMS.ritter);
+  const maxHP = calculateMaxHP(character.attributes);
+  const [currentHP, setCurrentHP] = useState(maxHP);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Show intro message on mount
@@ -131,6 +170,12 @@ export function GameSessionPage({ character, onBack }: GameSessionPageProps): Re
     // Simulate GM "thinking"
     setTimeout(() => {
       const gmMsg = generateGMResponse(trimmed, character);
+      // Failed dice rolls cost HP
+      if (gmMsg.diceResult && !gmMsg.diceResult.succeeded) {
+        const damage = Math.floor(Math.random() * 5) + 1;
+        setCurrentHP((prev) => Math.max(0, prev - damage));
+        gmMsg.text += ` Du erleidest ${damage} Schaden.`;
+      }
       setMessages((prev) => [...prev, gmMsg]);
       setLoading(false);
     }, 800 + Math.random() * 1200);
@@ -146,8 +191,50 @@ export function GameSessionPage({ character, onBack }: GameSessionPageProps): Re
             {character.name} • {CLASSES.find(c => c.value === character.className)?.name ?? character.className}
           </p>
         </div>
-        <div style={styles.headerRight} />
+        <button type="button" onClick={() => setShowInventory(!showInventory)} style={styles.inventoryButton}>
+          🎒
+        </button>
       </header>
+
+      {/* HP Bar */}
+      <div style={styles.hpBar}>
+        <div style={styles.hpLabel}>
+          <span>❤️ {currentHP}/{maxHP} HP</span>
+        </div>
+        <div style={styles.hpTrack}>
+          <div
+            style={{
+              ...styles.hpFill,
+              width: `${(currentHP / maxHP) * 100}%`,
+              background: currentHP > maxHP * 0.5 ? '#34d399' : currentHP > maxHP * 0.25 ? '#fbbf24' : '#ef4444',
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Inventory Panel */}
+      {showInventory && (
+        <div style={styles.inventoryPanel}>
+          <div style={styles.inventoryHeader}>
+            <h2 style={styles.inventoryTitle}>🎒 Inventar</h2>
+            <button type="button" onClick={() => setShowInventory(false)} style={styles.closeButton}>✕</button>
+          </div>
+          <div style={styles.inventoryGrid}>
+            {inventory.map((item) => (
+              <div key={item.id} style={styles.inventoryItem}>
+                <span style={styles.itemIcon}>{item.icon}</span>
+                <div style={styles.itemInfo}>
+                  <span style={styles.itemName}>{item.name}</span>
+                  <span style={styles.itemDesc}>{item.description}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          {inventory.length === 0 && (
+            <p style={styles.emptyInventory}>Dein Inventar ist leer.</p>
+          )}
+        </div>
+      )}
 
       <div style={styles.messages}>
         {messages.map((msg) => (
@@ -242,8 +329,115 @@ const styles: Record<string, React.CSSProperties> = {
   headerCenter: {
     textAlign: 'center',
   },
-  headerRight: {
-    width: '80px',
+  inventoryButton: {
+    background: 'rgba(139, 92, 246, 0.15)',
+    border: '1px solid rgba(139, 92, 246, 0.3)',
+    borderRadius: '10px',
+    padding: '8px 14px',
+    fontSize: '22px',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+  },
+  hpBar: {
+    padding: '8px 24px',
+    background: 'rgba(20, 10, 40, 0.8)',
+    borderBottom: '1px solid rgba(139, 92, 246, 0.1)',
+    maxWidth: '800px',
+    width: '100%',
+    margin: '0 auto',
+    boxSizing: 'border-box' as const,
+  },
+  hpLabel: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    fontSize: '12px',
+    color: '#e2d9f3',
+    marginBottom: '4px',
+    fontWeight: '600',
+  },
+  hpTrack: {
+    height: '8px',
+    background: 'rgba(139, 92, 246, 0.1)',
+    borderRadius: '4px',
+    overflow: 'hidden',
+  },
+  hpFill: {
+    height: '100%',
+    borderRadius: '4px',
+    transition: 'width 0.5s ease, background 0.3s ease',
+  },
+  inventoryPanel: {
+    position: 'absolute' as const,
+    top: '80px',
+    right: '16px',
+    width: '320px',
+    background: 'linear-gradient(145deg, rgba(20, 10, 40, 0.98), rgba(10, 5, 25, 0.99))',
+    border: '1px solid rgba(139, 92, 246, 0.4)',
+    borderRadius: '16px',
+    padding: '20px',
+    zIndex: 100,
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.6)',
+  },
+  inventoryHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '16px',
+    paddingBottom: '12px',
+    borderBottom: '1px solid rgba(139, 92, 246, 0.2)',
+  },
+  inventoryTitle: {
+    fontSize: '16px',
+    fontWeight: '700',
+    color: '#e2d9f3',
+    margin: 0,
+  },
+  closeButton: {
+    background: 'none',
+    border: 'none',
+    color: '#8b7faa',
+    fontSize: '18px',
+    cursor: 'pointer',
+    padding: '4px 8px',
+  },
+  inventoryGrid: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '10px',
+  },
+  inventoryItem: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '10px 12px',
+    background: 'rgba(139, 92, 246, 0.08)',
+    border: '1px solid rgba(139, 92, 246, 0.15)',
+    borderRadius: '10px',
+  },
+  itemIcon: {
+    fontSize: '28px',
+    width: '40px',
+    textAlign: 'center' as const,
+  },
+  itemInfo: {
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '2px',
+  },
+  itemName: {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#e2d9f3',
+  },
+  itemDesc: {
+    fontSize: '11px',
+    color: '#8b7faa',
+  },
+  emptyInventory: {
+    textAlign: 'center' as const,
+    color: '#6b5b8a',
+    fontSize: '14px',
+    padding: '20px',
   },
   title: {
     fontSize: '16px',
