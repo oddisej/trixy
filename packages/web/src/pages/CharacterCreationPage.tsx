@@ -36,7 +36,7 @@ const ATTRIBUTE_NAMES = [
 function roll4d6DropLowest(): { total: number; dice: number[] } {
   const dice = Array.from({ length: 4 }, () => Math.floor(Math.random() * 6) + 1);
   const sorted = [...dice].sort((a, b) => a - b);
-  const total = sorted[1] + sorted[2] + sorted[3]; // drop lowest
+  const total = sorted[1]! + sorted[2]! + sorted[3]!; // drop lowest
   return { total, dice };
 }
 
@@ -192,9 +192,9 @@ export function CharacterCreationPage({
             {attributes && (
               <div style={styles.attrGrid}>
                 {ATTRIBUTE_NAMES.map((attr) => {
-                  const roll = attributes[attr.key];
+                  const roll = attributes[attr.key]!;
                   const modified = applyClassModifiers(attributes, selectedClass);
-                  const attrData = modified[attr.key];
+                  const attrData = modified[attr.key]!;
                   const sorted = [...roll.dice].sort((a, b) => a - b);
                   const droppedValue = sorted[0];
                   let droppedUsed = false;
