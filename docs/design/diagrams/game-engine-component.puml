@@ -1,0 +1,44 @@
+@startuml GameEngine_Component
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+title Component Diagram – Game Engine
+
+Container_Boundary(game_engine, "Game Engine") {
+    Component(orchestrator, "GameEngine", "Orchestrator", "Coordinates the full player message flow: validation → classification → dice → narration → filter → persist")
+
+    Component(input_processor, "InputProcessor", "Validation", "Validates text input (length 1–2000, alphanumeric content), accepts text or transcribed voice")
+
+    Component(action_classifier, "ActionClassifier", "Decision", "Determines if an action needs a dice roll (uncertain outcome) or is purely narrative")
+
+    Component(dice_roller, "DiceRoller", "Mechanics", "Generates uniformly distributed D20 rolls (1–20)")
+
+    Component(action_resolver, "resolveAction", "Mechanics", "Combines roll + modifier vs. difficulty into ActionResolution (succeeded/failed)")
+
+    Component(context_builder, "buildConversationContext", "Context", "Selects last min(N, 50) messages for LLM context window")
+
+    Component(prompt_builder, "buildNarrationPrompt", "Prompt", "Constructs structured prompt with character, scene, world state, dice result, history reference")
+
+    Component(world_state, "WorldState helpers", "State", "applyFact, addNPC, addLocation – maintains consistency, rejects contradictions")
+}
+
+Container_Boundary(adapters, "Adapter Layer") {
+    Component(llm_adapter, "LLMAdapter", "External", "Generates narration text from prompt (timeout 10s GM / 5s NPC)")
+    Component(content_filter, "ContentFilterPipeline", "Filter", "Evaluates LLM output, regenerates up to 3x on block, falls back to safe response")
+    Component(session_loader, "SessionLoader", "Persistence", "Loads SessionState (character, conversation, scene)")
+    Component(session_persister, "SessionPersister", "Persistence", "Appends messages, saves session state")
+}
+
+Rel(orchestrator, input_processor, "validates input")
+Rel(orchestrator, session_loader, "loads context")
+Rel(orchestrator, action_classifier, "classifies action")
+Rel(orchestrator, action_resolver, "resolves dice action")
+Rel(action_resolver, dice_roller, "rolls D20")
+Rel(orchestrator, context_builder, "builds history context")
+Rel(orchestrator, prompt_builder, "constructs prompt")
+Rel(prompt_builder, world_state, "reads world state")
+Rel(orchestrator, llm_adapter, "generates narration")
+Rel(orchestrator, content_filter, "filters response")
+Rel(content_filter, llm_adapter, "regenerates on block")
+Rel(orchestrator, session_persister, "persists message + state")
+
+@enduml

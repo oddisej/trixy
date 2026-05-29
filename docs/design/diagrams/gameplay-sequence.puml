@@ -1,0 +1,79 @@
+@startuml Gameplay_Sequence
+
+title Sequence Diagram – Player Action to Narration
+
+actor Player
+participant "Web/Mobile\nClient" as Client
+participant "API Gateway" as API
+participant "GameEngine" as GE
+participant "InputProcessor" as IP
+participant "SessionLoader" as SL
+participant "ActionClassifier" as AC
+participant "DiceRoller" as DR
+participant "PromptBuilder" as PB
+participant "LLMAdapter" as LLM
+participant "ContentFilter" as CF
+participant "SessionPersister" as SP
+
+== Player submits action ==
+Player -> Client: types "I attack the dragon"
+Client -> API: POST /sessions/:id/messages\n{ text, origin: "text" }
+API -> GE: handlePlayerMessage(input)
+
+== Validation ==
+GE -> IP: process({ kind: "text", value })
+IP --> GE: ValidatedInput
+note right: Rejects empty, whitespace-only,\nor >2000 char inputs
+
+== Load context ==
+GE -> SL: loadSession(sessionId)
+SL --> GE: SessionState\n(character, conversation, scene)
+
+== Classify action ==
+GE -> AC: classify(text, context)
+AC --> GE: { needsDiceRoll, resolutionInput }
+
+alt Action needs dice roll
+    == Resolve mechanics ==
+    GE -> DR: rollD20()
+    DR --> GE: rollResult (1–20)
+    GE -> GE: resolveAction(input, roll)
+    note right: total = roll + modifier\nsucceeded = total >= difficulty
+end
+
+== Build prompt ==
+GE -> PB: buildNarrationPrompt(\n  character, scene, history,\n  worldState, diceResult\n)
+PB --> GE: structured prompt
+
+== Generate narration ==
+GE -> LLM: generateNarration(prompt, timeout: 10s)
+LLM --> GE: { kind: "ok", text }
+
+== Filter content ==
+GE -> CF: filterResponse(text, regenPrompt)
+
+alt Approved
+    CF --> GE: { text, wasFiltered: false }
+else Blocked → regenerate
+    loop up to 3 times
+        CF -> LLM: regenerate(prompt)
+        LLM --> CF: new text
+        CF -> CF: evaluate(new text)
+    end
+    alt Approved during retry
+        CF --> GE: { text, wasFiltered: true }
+    else All 3 attempts blocked
+        CF --> GE: { text: SAFE_FALLBACK, wasFiltered: true }
+    end
+end
+
+== Persist & respond ==
+GE -> SP: appendMessage(player message)
+GE -> SP: appendMessage(GM narration)
+SP --> GE: ok
+
+GE --> API: { kind: "narration", text, mechanics? }
+API --> Client: 200 OK\n{ narration, diceResult }
+Client --> Player: displays narration\n+ dice result
+
+@enduml
